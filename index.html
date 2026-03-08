@@ -24,15 +24,17 @@
 
   <!-- login form -->
 
-  <div class="login-container max-w-md  w-full bg-white shadow-lg min-h-[90%]  rounded-lg p-5">
+  <div class="login-container max-w-md  w-full bg-white shadow-lg rounded-lg p-4 md:p-6">
     <!-- head -->
     <div class="mx-auto text-center mt">
-      <img class="mx-auto" src="./assets/github-logo.png" alt="">
-      <h2 class="mt-4 font-semibold text-[1.5rem]">GitHub Issues Tracker</h2>
-      <p class="text-gray-5 00">Sign in to manage your issues</p>
+      <img class="mx-auto w-12 md:w-16" src="./assets/github-logo.png" alt="">
+      <h2 class="mt-2 md:mt-4 font-semibold text-lg sm:text-xl md:text-2xl">
+        GitHub Issues Tracker
+      </h2>
+      <p class="text-gray-500">Sign in to manage your issues</p>
     </div>
     <!-- login -->
-    <fieldset class="fieldset rounded-box w-xs p-4 mx-auto my-5">
+    <fieldset class="fieldset w-xs p-4 mx-auto my-2 md:my-5">
 
       <label class="label font-semibold text-black text-[0.8rem]">Username</label>
       <input id="username" type="email" class="input hover:border-none" placeholder="Enter Username" />
@@ -40,7 +42,7 @@
       <label class="label  font-semibold text-black text-[0.8rem]">Enter Password</label>
       <input id="pass" type="password" class="input hover:border-none" placeholder="Password" />
       <p class="text-[#4A00FF]">Default: admin123</p>
-      <button id="login-btn" class="btn btn-primary mt-4">Sign</button>
+      <button id="login-btn" class="btn btn-primary mt-3">Sign</button>
       <!-- OR -->
       <div class="flex items-center gap-2 my-4">
         <hr class="flex-1"> <span>OR</span>
@@ -48,8 +50,8 @@
       </div>
         <!-- demo -->
         <div class="text-center">
-          <p class="mb-2">Demo Credentials:</p>
-          <div class="p-4 bg-gray-200 rounded-md ">
+          <p class="mb-1 md:2">Demo Credentials:</p>
+          <div class="p-3 bg-gray-200 rounded-md text-sm md:text-base">
             <p class="text-[1rem]"><span class="font-bold">Username: </span>admin
             </p>
             <p class="text-[1rem]"><span class="font-bold">Password: </span>admin123
@@ -60,5 +62,7 @@
   
     <script src="./script/index.js"></script>
 </body>
+
+
 
 </html>
