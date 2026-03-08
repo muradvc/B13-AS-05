@@ -1,177 +1,270 @@
-// ==============================
-// Variables & DOM Elements
-// ==============================
-const allBtn = document.querySelectorAll(".btn"); // Status buttons: All / Open / Closed
-let allIssues = []; // সমস্ত issues এখানে সংরক্ষণ হবে
-let searchInput = document.querySelector("input[type='search']"); // Search input
-let searchBtn = document.querySelector(".btn.join-item"); // Search button
-const issueCountSpan = document.querySelector("div p span"); // Issue count span
+// =====================================
+// 1. Select HTML elements
+// =====================================
 
-// ==============================
-// Fetch API: Load all issues
-// ==============================
-fetch("https://phi-lab-server.vercel.app/api/v1/lab/issues")
-  .then(res => res.json())
-  .then(data => {
-    allIssues = data.data;
+// Buttons
+const allButtons = document.querySelectorAll(".btn");
 
-    // Assign each issue to a button based on status
-    allIssues.forEach(issue => {
-      if (issue.status?.toUpperCase() === "CLOSED") {
-        issue.button = "closed";
-      } else if (issue.status?.toUpperCase() === "OPEN") {
-        issue.button = "open";
-      } else {
-        issue.button = "all";
-      }
-    });
+// Search input and button
+const searchInput = document.querySelector("input[type='search']");
+const searchButton = document.querySelector(".btn.join-item");
 
-    // Initial render
-    renderIssues(allIssues);
-  });
+// Issue count display
+const issueCountSpan = document.querySelector("div p span");
 
-// ==============================
-// Render issues with count update
-// ==============================
+// Container for issue cards
+const cardContainer = document.getElementById("card-container");
+
+// Modal elements
+const modal = document.getElementById("issue-modal");
+const closeModalButton = document.getElementById("close-modal");
+
+const modalTitle = document.getElementById("modal-title");
+const modalDesc = document.getElementById("modal-desc");
+const modalAuthor = document.getElementById("modal-author");
+const modalAssignee = document.getElementById("modal-assignee");
+const modalPriority = document.getElementById("modal-priority");
+const modalStatus = document.getElementById("modal-status");
+const modalLabels = document.getElementById("modal-labels");
+
+// Store all issues
+let allIssues = [];
+
+// =====================================
+// 2. Spinner (Loading indicator)
+// =====================================
+
+// Create spinner element in JS
+const spinner = document.createElement("div");
+spinner.style.cssText = `
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(255,255,255,0.5);
+  z-index: 9999;
+  display: none;
+`;
+
+// Inner circle for spinner
+spinner.innerHTML = `
+  <div style="
+    border: 4px solid #ccc;
+    border-top: 4px solid #3490dc;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    animation: spin 1s linear infinite;
+  "></div>
+`;
+
+// Spinner animation
+const style = document.createElement("style");
+style.innerHTML = `
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`;
+document.head.appendChild(style);
+document.body.appendChild(spinner);
+
+// Show / hide functions
+function showSpinner() { spinner.style.display = "flex"; }
+function hideSpinner() { spinner.style.display = "none"; }
+
+// =====================================
+// 3. Load all issues from API
+// =====================================
+
+function loadAllIssues() {
+  showSpinner();
+
+  fetch("https://phi-lab-server.vercel.app/api/v1/lab/issues")
+    .then(res => res.json())
+    .then(data => {
+      allIssues = data.data;
+      renderIssues(allIssues);
+    })
+    .finally(() => hideSpinner());
+}
+
+// Initial load
+loadAllIssues();
+
+// =====================================
+// 4. Render issues and update count
+// =====================================
+
 function renderIssues(issues) {
-  showCards(issues);
-  updateIssueCount(issues.length);
+  displayCards(issues);
+  issueCountSpan.innerText = issues.length;
 }
 
-// ==============================
-// Update Issue Count
-// ==============================
-function updateIssueCount(count) {
-  issueCountSpan.innerText = count;
-}
+// =====================================
+// 5. Filter issues by status
+// =====================================
 
-// ==============================
-// Filter & Search Logic
-// ==============================
 function getFilteredIssues() {
   let filtered = [...allIssues];
 
-  // 1. Status button filter
-  const activeBtn = document.querySelector(".btn.active");
-  if (activeBtn) {
-    const btnText = activeBtn.innerText.toLowerCase();
-    if (btnText === "open") {
-      filtered = filtered.filter(issue => issue.status?.toUpperCase() === "OPEN");
-    } else if (btnText === "closed") {
-      filtered = filtered.filter(issue => issue.status?.toUpperCase() === "CLOSED").slice(0, 4);
-    }
-  }
+  const activeButton = document.querySelector(".btn.active");
+  if (activeButton) {
+    const text = activeButton.innerText.toLowerCase();
 
-  // 2. Search filter
-  const searchTerm = searchInput.value.trim().toLowerCase();
-  if (searchTerm) {
-    filtered = filtered.filter(issue =>
-      (issue.id && issue.id.toString().includes(searchTerm)) ||
-      (issue.title && issue.title.toLowerCase().includes(searchTerm)) ||
-      (issue.description && issue.description.toLowerCase().includes(searchTerm)) ||
-      (issue.status && issue.status.toLowerCase().includes(searchTerm))
-    );
+    if (text === "open") {
+      filtered = filtered.filter(issue => issue.status?.toUpperCase() === "OPEN");
+    } else if (text === "closed") {
+      filtered = filtered.filter(issue => issue.status?.toUpperCase() === "CLOSED");
+    }
   }
 
   return filtered;
 }
 
-// ==============================
-// Status Buttons Click
-// ==============================
-allBtn.forEach(btn => {
-  btn.addEventListener("click", function () {
-    allBtn.forEach(b => b.classList.remove("active"));
-    this.classList.add("active");
+// =====================================
+// 6. Filter button click
+// =====================================
+
+allButtons.forEach(button => {
+  button.addEventListener("click", () => {
+    allButtons.forEach(b => b.classList.remove("active"));
+    button.classList.add("active");
 
     const filtered = getFilteredIssues();
     renderIssues(filtered);
   });
 });
 
-// ==============================
-// Search Button Click
-// ==============================
-searchBtn.addEventListener("click", function () {
-  const filtered = getFilteredIssues();
-  renderIssues(filtered);
+// =====================================
+// 7. Search functionality
+// =====================================
+
+function searchIssues() {
+  const query = searchInput.value.trim();
+
+  if (!query) {
+    renderIssues(allIssues);
+    return;
+  }
+
+  showSpinner();
+  fetch(`https://phi-lab-server.vercel.app/api/v1/lab/issues/search?q=${query}`)
+    .then(res => res.json())
+    .then(data => renderIssues(data.data))
+    .finally(() => hideSpinner());
+}
+
+searchButton.addEventListener("click", searchIssues);
+searchInput.addEventListener("keypress", e => {
+  if (e.key === "Enter") searchIssues();
 });
 
-// ==============================
-// Show Cards Function
-// ==============================
-function showCards(issues) {
-  const container = document.getElementById("card-container");
-  container.innerHTML = ""; // Clear previous cards
+// =====================================
+// 8. Open modal for single issue
+// =====================================
+
+function openIssueModal(id) {
+  showSpinner();
+
+  fetch(`https://phi-lab-server.vercel.app/api/v1/lab/issue/${id}`)
+    .then(res => res.json())
+    .then(data => {
+      const issue = data.data;
+
+      modalTitle.innerText = issue.title;
+      modalDesc.innerText = issue.description;
+      modalAuthor.innerText = `Opened by ${issue.author || "Unknown"}`;
+      modalAssignee.innerText = issue.author || "Unknown";
+      modalPriority.innerText = issue.priority || "N/A";
+
+      // Status color
+      const status = issue.status?.toUpperCase() || "N/A";
+      modalStatus.innerText = status;
+      modalStatus.className = status === "OPEN"
+        ? "bg-green-200 text-green-700 px-2 py-1 rounded"
+        : status === "CLOSED"
+          ? "bg-purple-200 text-purple-700 px-2 py-1 rounded"
+          : "bg-gray-200 text-gray-700 px-2 py-1 rounded";
+
+      // Labels
+      modalLabels.innerHTML = "";
+      if (Array.isArray(issue.labels)) {
+        issue.labels.forEach(label => {
+          const span = document.createElement("span");
+          span.style.backgroundColor = label.color || "#e5e7eb";
+          span.style.color = label.textColor || "#000";
+          span.style.padding = "2px 6px";
+          span.style.borderRadius = "4px";
+          span.style.fontSize = "12px";
+          span.style.marginRight = "4px";
+          span.innerText = label.name || label;
+          modalLabels.appendChild(span);
+        });
+      }
+
+      modal.classList.remove("hidden");
+    })
+    .finally(() => hideSpinner());
+}
+
+// =====================================
+// 9. Close modal
+// =====================================
+
+closeModalButton.addEventListener("click", () => {
+  modal.classList.add("hidden");
+});
+
+// =====================================
+// 10. Display issue cards
+// =====================================
+
+function displayCards(issues) {
+  cardContainer.innerHTML = "";
 
   issues.forEach(issue => {
-
-    // ------------------------------
-    // Border Top Color Based on Status
-    // ------------------------------
-    // Closed → Purple, Open → Green
     const borderTopColor = issue.status?.toUpperCase() === "CLOSED"
       ? "border-t-4 border-purple-500"
       : "border-t-4 border-green-500";
 
-    // Priority background color
-    const priorityBg = (issue.priority?.toUpperCase() === "LOW")
-      ? "bg-gray-300"
-      : "bg-red-300";
+    let priorityBg = "bg-gray-300";
+    if (issue.priority?.toUpperCase() === "HIGH") priorityBg = "bg-red-300";
+    else if (issue.priority?.toUpperCase() === "MEDIUM") priorityBg = "bg-yellow-300";
 
-    // Enhancement or Bug / Help Wanted Labels
-    let enhancementContent = "";
-    if (Array.isArray(issue.labels) && issue.labels.some(label => label.toLowerCase() === "enhancement")) {
-      enhancementContent = `<p class="bg-[#0ded9f2e] text-green-500 rounded-2xl w-40 mx-auto px-5 text-sm mt-2">ENHANCEMENT</p>`;
-    } else {
-      enhancementContent = `
-        <div class="flex justify-between items-center px-6 pt-4">
-          <p class="text-sm bg-[#ef44446b] text-red-400 px-5 rounded-md">Bug</p>
-          <p class="text-sm px-2 rounded-md bg-[#d977063b] text-[#D97706]">help wanted</p>
-        </div>
-      `;
+    // Labels HTML
+    let labelsHTML = "";
+    if (Array.isArray(issue.labels) && issue.labels.length > 0) {
+      labelsHTML = issue.labels.map(labelObj => {
+        const name = labelObj.name || labelObj;
+        const color = labelObj.color || "#ef44446b";
+        const textColor = labelObj.textColor || "#000";
+        return `<span class="text-sm px-2 py-1 rounded" style="background-color:${color};color:${textColor}">${name}</span>`;
+      }).join("");
     }
 
-    // Format Created Date
     const createdDate = issue.createdAt
       ? new Date(issue.createdAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })
       : "";
 
-    // Create Card HTML
-    const div = document.createElement("div");
-    div.innerHTML = `
-      <div class="border p-4 rounded-lg shadow-md bg-white ${borderTopColor}">
-          <div class="flex justify-between mb-2">
-              <img src="./assets/Open-Status.png" alt="" class="w-6 h-6"/>
-              <p class="rounded-2xl px-4 ${priorityBg}">
-                  ${issue.priority || ""}
-              </p>
-          </div>
-
-          <h2 class="text-lg font-bold">${issue.title || ""}</h2>
-
-          <p class="text-gray-500 mt-2">
-              ${issue.description || ""}
-          </p>
-
-          ${enhancementContent}
-
-          <div class="mt-3 flex gap-2 flex-wrap">
-              <span class="bg-red-200 px-2 py-1 rounded text-sm">
-                  ${issue.type || ""}
-              </span>
-          </div>
-
-          <p class="text-sm mt-3 text-gray-400">
-              #${issue.id || ""} by ${issue.author || ""} | ${issue.date || ""}
-          </p>
-
-          <p class="text-xs mt-1 text-gray-400">
-              Created At: ${createdDate}
-          </p>
+    const card = document.createElement("div");
+    card.innerHTML = `
+      <div class="border p-4 rounded-lg shadow-md bg-white cursor-pointer ${borderTopColor}">
+        <div class="flex justify-between mb-2">
+          <img src="./assets/Open-Status.png" class="w-6 h-6"/>
+          <p class="rounded-2xl px-4 ${priorityBg}">${issue.priority || ""}</p>
+        </div>
+        <h2 class="text-lg font-bold">${issue.title || ""}</h2>
+        <p class="text-gray-500 mt-2">${issue.description || ""}</p>
+        <div class="mt-2 flex gap-2 flex-wrap">${labelsHTML}</div>
+        <p class="text-sm mt-3 text-gray-800">#${issue.id || ""} by ${issue.author || ""}</p>
+        <p class="text-xs mt-1 text-gray-400">Created At: ${createdDate}</p>
       </div>
     `;
 
-    container.appendChild(div);
+    // Open modal on click
+    card.addEventListener("click", () => openIssueModal(issue.id));
+
+    cardContainer.appendChild(card);
   });
 }
