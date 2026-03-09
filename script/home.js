@@ -261,3 +261,4 @@ function displayCards(issues) {
     cardContainer.appendChild(card);
   });
 }
+
