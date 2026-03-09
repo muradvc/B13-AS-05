@@ -1,6 +1,3 @@
-// =====================================
-// 1. Select HTML elements
-// =====================================
 
 // Buttons
 const allButtons = document.querySelectorAll(".btn");
@@ -29,8 +26,6 @@ const modalLabels = document.getElementById("modal-labels");
 
 // Store all issues
 let allIssues = [];
-
-
 
 // Create spinner element in JS
 const spinner = document.createElement("div");
