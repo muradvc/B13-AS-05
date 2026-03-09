@@ -30,9 +30,7 @@ const modalLabels = document.getElementById("modal-labels");
 // Store all issues
 let allIssues = [];
 
-// =====================================
-// 2. Spinner (Loading indicator)
-// =====================================
+
 
 // Create spinner element in JS
 const spinner = document.createElement("div");
